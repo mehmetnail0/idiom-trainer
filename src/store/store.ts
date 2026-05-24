@@ -4,11 +4,13 @@ import type { Item, DayStats } from '../types'
 import { seedItems } from '../data/seed'
 import { nextReview } from '../lib/fsrs'
 
+const STORE_KEY = 'idiom-trainer-data'
+
 type Store = {
   items: Item[]
   stats: DayStats[]
   streak: number
-  _hasHydrated: boolean
+  lastSaved: number
 
   rate: (id: string, rating: 1 | 3 | 4) => void
   addItem: (item: Omit<Item, 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>) => void
@@ -39,7 +41,7 @@ export const useStore = create<Store>()(
       items: seedItems,
       stats: [],
       streak: 0,
-      _hasHydrated: true,
+      lastSaved: 0,
 
       rate: (id, rating) => {
         const t = today()
@@ -65,17 +67,19 @@ export const useStore = create<Store>()(
             items: s.items.map(i => i.id === id ? { ...i, ...update } : i),
             stats: newStats,
             streak: calcStreak(newStats),
+            lastSaved: Date.now(),
           }
         })
       },
 
       addItem: (data) => set(s => ({
         items: [...s.items, { ...data, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null }],
+        lastSaved: Date.now(),
       })),
 
       resetProgress: () => set({
         items: get().items.map(i => ({ ...i, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null })),
-        stats: [], streak: 0,
+        stats: [], streak: 0, lastSaved: Date.now(),
       }),
 
       exportData: () => JSON.stringify({ items: get().items, stats: get().stats }, null, 2),
@@ -84,7 +88,7 @@ export const useStore = create<Store>()(
         try {
           const d = JSON.parse(json)
           if (!d.items) return false
-          set({ items: d.items, stats: d.stats ?? [], streak: calcStreak(d.stats ?? []) })
+          set({ items: d.items, stats: d.stats ?? [], streak: calcStreak(d.stats ?? []), lastSaved: Date.now() })
           return true
         } catch { return false }
       },
@@ -94,6 +98,19 @@ export const useStore = create<Store>()(
         return get().stats.find(d => d.date === t) ?? { date: t, reviewed: 0, correct: 0, newLearned: 0 }
       },
     }),
-    { name: 'idiom-trainer-v4' },
+    {
+      name: STORE_KEY,
+      partialize: (state) => ({
+        items: state.items,
+        stats: state.stats,
+        streak: state.streak,
+        lastSaved: state.lastSaved,
+      }),
+      merge: (persisted, current) => {
+        const p = persisted as Partial<Store> | undefined
+        if (!p || !p.items || p.items.length === 0) return current
+        return { ...current, ...p }
+      },
+    },
   ),
 )
