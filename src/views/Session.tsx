@@ -13,7 +13,7 @@ function shuffle<T>(a: T[]): T[] {
   return c
 }
 
-function SessionSummary({ correct, wrong, items, onExit }: { correct: string[]; wrong: string[]; items: Item[]; onExit: () => void }) {
+function SessionSummary({ correct, wrong, items, onExit, onAgain }: { correct: string[]; wrong: string[]; items: Item[]; onExit: () => void; onAgain: () => void }) {
   const total = correct.length + wrong.length
   const pct = total > 0 ? Math.round((correct.length / total) * 100) : 0
 
@@ -57,31 +57,47 @@ function SessionSummary({ correct, wrong, items, onExit }: { correct: string[]; 
         </div>
       )}
 
-      <button onClick={onExit} className="w-full py-3 rounded-lg text-sm border border-border/30 text-text-dim/50 hover:text-text/70 transition-colors">
-        Back
-      </button>
+      <div className="flex gap-2">
+        <button onClick={onExit} className="flex-1 py-3 rounded-lg text-sm border border-border/30 text-text-dim/50 hover:text-text/70 transition-colors">
+          Back
+        </button>
+        <button onClick={onAgain} className="flex-1 py-3 rounded-lg text-sm border border-accent/30 text-accent/70 hover:text-accent hover:border-accent/50 transition-colors">
+          Another 10 →
+        </button>
+      </div>
     </div>
   )
 }
 
 export default function Session({ onExit }: { onExit: () => void }) {
   const { items, rate } = useStore()
+  const [round, setRound] = useState(0)
 
-  const [queue] = useState<QItem[]>(() => {
+  const makeQueue = (): QItem[] => {
     let ids = buildQueue(items)
     if (ids.length === 0) ids = shuffle(items.map(i => i.id))
     ids = ids.slice(0, 10)
     return ids.map((id, i) => ({
       question: generateQuestion(items.find(x => x.id === id)!, items),
       itemId: id,
-      key: i,
+      key: round * 100 + i,
     }))
-  })
+  }
 
+  const [queue, setQueue] = useState<QItem[]>(makeQueue)
   const [index, setIndex] = useState(0)
   const [correctIds, setCorrectIds] = useState<string[]>([])
   const [wrongIds, setWrongIds] = useState<string[]>([])
   const [done, setDone] = useState(false)
+
+  const startNewRound = () => {
+    setRound(r => r + 1)
+    setQueue(makeQueue())
+    setIndex(0)
+    setCorrectIds([])
+    setWrongIds([])
+    setDone(false)
+  }
 
   const current = queue[index]
   const currentItem = useMemo(() => items.find(i => i.id === current?.itemId), [items, current?.itemId])
@@ -96,7 +112,7 @@ export default function Session({ onExit }: { onExit: () => void }) {
   }
 
   if (done) {
-    return <SessionSummary correct={correctIds} wrong={wrongIds} items={items} onExit={onExit} />
+    return <SessionSummary correct={correctIds} wrong={wrongIds} items={items} onExit={onExit} onAgain={startNewRound} />
   }
 
   if (!current || !currentItem) return null
