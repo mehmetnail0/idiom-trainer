@@ -39,7 +39,7 @@ export const useStore = create<Store>()(
       items: seedItems,
       stats: [],
       streak: 0,
-      _hasHydrated: false,
+      _hasHydrated: true,
 
       rate: (id, rating) => {
         const t = today()
@@ -94,11 +94,6 @@ export const useStore = create<Store>()(
         return get().stats.find(d => d.date === t) ?? { date: t, reviewed: 0, correct: 0, newLearned: 0 }
       },
     }),
-    {
-      name: 'idiom-trainer-v4',
-      onRehydrateStorage: () => () => {
-        useStore.setState({ _hasHydrated: true })
-      },
-    },
+    { name: 'idiom-trainer-v4' },
   ),
 )
