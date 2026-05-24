@@ -76,10 +76,13 @@ Göster:
 
 ## Yeni Idiom Ekleme
 
-"idiom ekle: <phrase>" dendiğinde:
-- phrase, meaning, example, category, difficulty sor
-- `idioms.json`'a ekle (id: `c<timestamp>`)
-- commit at
+Kullanıcı yeni idiom verdiğinde (tek tek veya liste halinde):
+1. Her idiom için meaning, example, category, difficulty belirle (Claude belirler, kullanıcıya sormadan)
+2. Example cümlesi founder/startup/creator bağlamında olsun
+3. `idioms.json`'a ekle (id: `c<timestamp>` formatında)
+4. Commit at + push
+
+Kullanıcı sadece phrase verir, gerisini Claude doldurur. Eğer kullanıcı meaning de verdiyse onu kullan.
 
 ## AskUserQuestion Formatı
 
