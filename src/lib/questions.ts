@@ -61,9 +61,11 @@ function meaningWithExample(item: Item): string {
 
 function meaningMatch(item: Item, all: Item[]): MCQuestion {
   const d = distractors(item, all, Math.min(3, all.length - 1))
-  const items = shuffle([item, ...d])
-  const opts = items.map(i => meaningWithExample(i))
-  return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(meaningWithExample(item)) }
+  const allItems = shuffle([item, ...d])
+  const optMap = new Map<string, string>()
+  allItems.forEach(i => optMap.set(i.id, meaningWithExample(i)))
+  const opts = allItems.map(i => optMap.get(i.id)!)
+  return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(optMap.get(item.id)!) }
 }
 
 function sentenceJudge(item: Item): MCQuestion {
@@ -75,14 +77,21 @@ function sentenceJudge(item: Item): MCQuestion {
   return { type: 'sentence-judge', itemId: item.id, prompt: `Which sentence uses "${item.phrase}" correctly?`, options, correctIndex: showCorrectFirst ? 0 : 1 }
 }
 
+function safeIndex(q: MCQuestion): MCQuestion {
+  if (q.correctIndex < 0 || q.correctIndex >= q.options.length) {
+    return { ...q, correctIndex: 0 }
+  }
+  return q
+}
+
 export function generateQuestion(item: Item, all: Item[]): MCQuestion {
   const r = Math.random()
 
   if (r < 0.4) {
     const fb = fillBlank(item, all)
-    if (fb) return fb
+    if (fb) return safeIndex(fb)
   }
 
-  if (r < 0.7) return meaningMatch(item, all)
-  return sentenceJudge(item)
+  if (r < 0.7) return safeIndex(meaningMatch(item, all))
+  return safeIndex(sentenceJudge(item))
 }
