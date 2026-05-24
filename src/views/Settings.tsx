@@ -27,31 +27,24 @@ export default function Settings() {
     reader.readAsText(file)
   }
 
-  const mastered = idioms.filter(i => i.status === 'mastered').length
-  const learning = idioms.filter(i => i.status === 'learning').length
+  const m = idioms.filter(i => i.status === 'mastered').length
+  const l = idioms.filter(i => i.status === 'learning').length
 
   return (
     <div className="space-y-5">
       <h2 className="text-xl font-bold">Settings</h2>
-
       <div className="bg-card rounded-xl p-4 border border-border space-y-1 text-sm">
-        <div className="flex justify-between"><span className="text-text-dim">Total idioms</span><span>{idioms.length}</span></div>
-        <div className="flex justify-between"><span className="text-text-dim">Mastered</span><span className="text-correct">{mastered}</span></div>
-        <div className="flex justify-between"><span className="text-text-dim">Learning</span><span className="text-accent">{learning}</span></div>
-        <div className="flex justify-between"><span className="text-text-dim">New</span><span>{idioms.length - mastered - learning}</span></div>
+        <div className="flex justify-between"><span className="text-text-dim">Total</span><span>{idioms.length}</span></div>
+        <div className="flex justify-between"><span className="text-text-dim">Mastered</span><span className="text-correct">{m}</span></div>
+        <div className="flex justify-between"><span className="text-text-dim">Learning</span><span className="text-accent">{l}</span></div>
+        <div className="flex justify-between"><span className="text-text-dim">New</span><span>{idioms.length - m - l}</span></div>
       </div>
-
       <div className="space-y-3">
-        <button onClick={handleExport} className="w-full bg-card-hover border border-border text-text py-3 rounded-xl text-sm font-medium">
-          Export Backup (JSON)
-        </button>
-        <button onClick={() => fileRef.current?.click()} className="w-full bg-card-hover border border-border text-text py-3 rounded-xl text-sm font-medium">
-          Import Backup
-        </button>
+        <button onClick={handleExport} className="w-full bg-card-hover border border-border text-text py-3 rounded-xl text-sm font-medium">Export Backup</button>
+        <button onClick={() => fileRef.current?.click()} className="w-full bg-card-hover border border-border text-text py-3 rounded-xl text-sm font-medium">Import Backup</button>
         <input ref={fileRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
         {msg && <p className="text-sm text-center text-accent">{msg}</p>}
       </div>
-
       <div className="border-t border-border pt-4">
         {!confirm ? (
           <button onClick={() => setConfirm(true)} className="w-full text-wrong text-sm py-3">Reset All Progress</button>

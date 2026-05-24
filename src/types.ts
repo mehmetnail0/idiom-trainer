@@ -1,22 +1,19 @@
-export type Category = 'founder' | 'colloquial' | 'business'
-export type Difficulty = 1 | 2 | 3
+export type Category = 'everyday' | 'business' | 'casual'
 export type IdiomStatus = 'new' | 'learning' | 'mastered'
 
 export type Idiom = {
   id: string
   phrase: string
   meaning: string
-  example: string
+  examples: string[]
+  notes: string
   category: Category
-  difficulty: Difficulty
   status: IdiomStatus
   correct: number
   wrong: number
   lastSeen: number | null
   nextDue: number | null
 }
-
-export type QuestionType = 'fill-blank' | 'meaning-match' | 'context-usage' | 'production'
 
 export type MCQuestion = {
   type: 'fill-blank' | 'meaning-match' | 'context-usage'
@@ -30,8 +27,6 @@ export type ProdQuestion = {
   type: 'production'
   idiomId: string
   prompt: string
-  meaning: string
-  example: string
 }
 
 export type Question = MCQuestion | ProdQuestion

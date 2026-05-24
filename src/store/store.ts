@@ -10,15 +10,12 @@ type Store = {
   streak: number
   lastSessionDate: string
   totalSessions: number
-
   recordAnswer: (id: string, correct: boolean) => void
   finishSession: () => void
   resetProgress: () => void
   exportData: () => string
   importData: (json: string) => boolean
 }
-
-function today() { return new Date().toISOString().slice(0, 10) }
 
 export const useStore = create<Store>()(
   persist(
@@ -45,25 +42,15 @@ export const useStore = create<Store>()(
       })),
 
       finishSession: () => set(s => {
-        const t = today()
-        const yesterday = new Date(Date.now() - DAY).toISOString().slice(0, 10)
-        const continues = s.lastSessionDate === yesterday || s.lastSessionDate === t
-        return {
-          totalSessions: s.totalSessions + 1,
-          lastSessionDate: t,
-          streak: continues ? (s.lastSessionDate === t ? s.streak : s.streak + 1) : 1,
-        }
+        const t = new Date().toISOString().slice(0, 10)
+        const y = new Date(Date.now() - DAY).toISOString().slice(0, 10)
+        const cont = s.lastSessionDate === y || s.lastSessionDate === t
+        return { totalSessions: s.totalSessions + 1, lastSessionDate: t, streak: cont ? (s.lastSessionDate === t ? s.streak : s.streak + 1) : 1 }
       }),
 
-      resetProgress: () => set({
-        idioms: seedIdioms.map(i => ({ ...i, status: 'new' as const, correct: 0, wrong: 0, lastSeen: null, nextDue: null })),
-        streak: 0, lastSessionDate: '', totalSessions: 0,
-      }),
+      resetProgress: () => set({ idioms: seedIdioms.map(i => ({ ...i, status: 'new' as const, correct: 0, wrong: 0, lastSeen: null, nextDue: null })), streak: 0, lastSessionDate: '', totalSessions: 0 }),
 
-      exportData: () => {
-        const { idioms, streak, lastSessionDate, totalSessions } = get()
-        return JSON.stringify({ idioms, streak, lastSessionDate, totalSessions }, null, 2)
-      },
+      exportData: () => JSON.stringify({ idioms: get().idioms, streak: get().streak, lastSessionDate: get().lastSessionDate, totalSessions: get().totalSessions }, null, 2),
 
       importData: (json) => {
         try {
