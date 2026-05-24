@@ -8,20 +8,24 @@ function shuffle<T>(a: T[]): T[] {
 
 function esc(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
-function distractors(target: Item, all: Item[], n: number) {
-  return shuffle(all.filter(i => i.id !== target.id)).slice(0, Math.min(n, all.length - 1))
+function distractors(target: Item, all: Item[], n: number): Item[] {
+  const pool = shuffle(all.filter(i => i.id !== target.id))
+  return pool.slice(0, Math.min(n, pool.length))
 }
 
 function fillBlank(item: Item, all: Item[]): MCQuestion {
   const ex = item.examples[Math.floor(Math.random() * item.examples.length)]
   const blank = ex.replace(new RegExp(esc(item.phrase), 'gi'), '______')
-  const d = distractors(item, all, 3)
+
+  const numDistractors = Math.min(3, all.length - 1)
+  const d = distractors(item, all, numDistractors)
   const opts = shuffle([item, ...d].map(i => i.phrase))
   return { type: 'fill-blank', itemId: item.id, prompt: blank, options: opts, correctIndex: opts.indexOf(item.phrase) }
 }
 
 function meaningMatch(item: Item, all: Item[]): MCQuestion {
-  const d = distractors(item, all, 3)
+  const numDistractors = Math.min(3, all.length - 1)
+  const d = distractors(item, all, numDistractors)
   const opts = shuffle([item, ...d].map(i => i.meaning))
   return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(item.meaning) }
 }
