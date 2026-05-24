@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from './store/store'
 import Home from './views/Home'
 import Session from './views/Session'
@@ -9,9 +9,20 @@ import Sidebar from './components/Sidebar'
 type View = 'home' | 'session' | 'analytics' | 'settings'
 
 export default function App() {
-  const { items } = useStore()
+  const { items, syncFromCloud } = useStore()
   const [view, setView] = useState<View>('home')
   const [sessionKey, setSessionKey] = useState(0)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    syncFromCloud().finally(() => setReady(true))
+  }, [])
+
+  if (!ready) {
+    return <div className="min-h-dvh bg-bg flex items-center justify-center">
+      <p className="text-text-dim/30 text-xs">loading...</p>
+    </div>
+  }
 
   const startSession = () => { setSessionKey(k => k + 1); setView('session') }
 

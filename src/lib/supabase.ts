@@ -22,7 +22,9 @@ export async function loadProgress(): Promise<ProgressData | null> {
       .single()
 
     if (error || !data?.progress) return null
-    return data.progress as ProgressData
+    const p = data.progress as ProgressData
+    if (!p.items || p.items.length === 0) return null
+    return p
   } catch {
     return null
   }
@@ -32,10 +34,16 @@ export async function saveProgress(progress: ProgressData): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('idiom_trainer')
-      .upsert({ id: ROW_ID, progress, updated_at: new Date().toISOString() })
+      .update({ progress, updated_at: new Date().toISOString() })
+      .eq('id', ROW_ID)
 
-    return !error
-  } catch {
+    if (error) {
+      console.error('[idiom-trainer] cloud save failed:', error.message)
+      return false
+    }
+    return true
+  } catch (e) {
+    console.error('[idiom-trainer] cloud save error:', e)
     return false
   }
 }
