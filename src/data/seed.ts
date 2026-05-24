@@ -178,16 +178,16 @@ const expressions: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'last
   {
     type: 'idiom',
     phrase: 'you\'ll hear from us',
-    meaning: 'We will contact you / you will get our response (can be neutral, positive, or threatening)',
+    meaning: 'We will contact you (neutral) / You\'ll have to face us, you\'ll answer to us (threatening)',
     examples: [
       '"Thank you for interviewing. You\'ll hear from us within a week."',
       'If you keep doing this, you\'ll hear from our lawyers.',
-      '"How did the audition go?" "They said I\'d hear from them soon."',
-      'We appreciate the proposal — you\'ll hear from us by Friday.',
       'Cross us again and you\'ll hear from all of us.',
+      'Mess with my family and you\'ll hear from me personally.',
+      '"How did the audition go?" "They said I\'d hear from them soon."',
     ],
     wrongExample: 'You\'ll hear from us because we are very loud people.',
-    notes: '"Hear from" = receive communication from someone. Neutral in job interviews, threatening in conflict. "You\'ll hear from my lawyer" = classic threat. "Hear from all of us" = group warning — much stronger.',
+    notes: 'Two modes: (1) neutral = "bizden haber alacaksın" (iş görüşmesi, e-posta). (2) threatening = "karşında bizi bulacaksın, hesap vereceksin" — tone changes everything. "You\'ll hear from my lawyer" = classic threat. "Hear from ALL of us" = grup tehdidi, çok daha sert. Homelander bunu tehdit modunda kullanır.',
   },
   {
     type: 'idiom',
