@@ -51,7 +51,7 @@ export default function QuizCard({ question, item, num, total, onDone }: {
           const parts = opt.split('\n» ')
           return (
             <button key={i} disabled={answered} onClick={() => setPicked(i)}
-              className={`w-full text-left px-4 py-3 rounded-lg border text-[13px] leading-relaxed transition-all ${cls}`}>
+              className={`w-full text-left px-4 py-3.5 rounded-lg border text-[13px] leading-relaxed transition-all min-h-[48px] ${cls}`}>
               {question.type === 'sentence-judge' ? (
                 opt
               ) : (

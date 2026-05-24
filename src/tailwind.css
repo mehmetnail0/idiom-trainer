@@ -18,6 +18,12 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
   background: #111111;
+  -webkit-font-smoothing: antialiased;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  nav { padding-bottom: env(safe-area-inset-bottom); }
+  main { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
 }
 
 @keyframes fadeIn {
