@@ -1,25 +1,41 @@
 import { useState } from 'react'
 import type { Item } from '../types'
-import { getHeat, isPassive } from '../lib/fsrs'
+import { getHeat, isPassive, daysUntilDue } from '../lib/fsrs'
 import ItemModal from './ItemModal'
 
-function heatDot(heat: number): string {
-  if (heat === 0) return 'bg-[#333]'
-  if (heat < 0.3) return 'bg-[#555]'
-  if (heat < 0.5) return 'bg-[#8B7355]'
-  if (heat < 0.75) return 'bg-accent'
-  return 'bg-correct'
+function heatStyle(heat: number): string {
+  if (heat === 0) return '#333'
+  if (heat < 0.15) return '#444'
+  if (heat < 0.3) return '#665'
+  if (heat < 0.45) return '#886'
+  if (heat < 0.6) return '#A97'
+  if (heat < 0.75) return '#C93'
+  if (heat < 0.9) return '#D93'
+  return '#4ADE80'
+}
+
+function HeatBar({ heat }: { heat: number }) {
+  return (
+    <div className="w-8 h-1 rounded-full bg-border/30 overflow-hidden shrink-0">
+      <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.max(5, heat * 100)}%`, background: heatStyle(heat) }} />
+    </div>
+  )
 }
 
 function Row({ item, onClick }: { item: Item; onClick: () => void }) {
+  const heat = getHeat(item)
+  const due = daysUntilDue(item)
   return (
-    <button onClick={onClick} className="w-full text-left px-4 py-2 hover:bg-card-hover transition-colors">
+    <button onClick={onClick} className="w-full text-left px-4 py-2.5 hover:bg-card-hover transition-colors group">
       <div className="flex items-center gap-2">
-        <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${heatDot(getHeat(item))}`} />
-        <span className="text-[13px] text-text/80 truncate">{item.phrase}</span>
-        {item.type === 'word' && <span className="text-[9px] text-text-dim/40 ml-auto uppercase">w</span>}
+        <span className="w-1.5 h-1.5 rounded-full shrink-0 transition-colors duration-500" style={{ background: heatStyle(heat) }} />
+        <span className="text-[13px] text-text/70 truncate flex-1">{item.phrase}</span>
+        <HeatBar heat={heat} />
       </div>
-      <p className="text-[10px] text-text-dim/40 italic ml-4 mt-0.5 truncate leading-snug">{item.examples[0]}</p>
+      <div className="flex items-center gap-2 ml-4 mt-0.5">
+        <p className="text-[10px] text-text-dim/30 italic truncate flex-1">{item.examples[0]}</p>
+        {due !== null && due > 0 && <span className="text-[9px] text-text-dim/20 shrink-0">{due}d</span>}
+      </div>
     </button>
   )
 }
@@ -34,18 +50,18 @@ export default function Sidebar({ items }: { items: Item[] }) {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="px-4 py-3 border-b border-border/50 shrink-0">
-          <p className="text-[11px] text-text-dim uppercase tracking-[0.15em]">Library</p>
-          <p className="text-[10px] text-text-dim/50 mt-0.5">{active.length} active{passive.length > 0 ? ` · ${passive.length} passive` : ''}</p>
+        <div className="px-4 py-3 border-b border-border/30 shrink-0">
+          <p className="text-[11px] text-text-dim/60 uppercase tracking-[0.15em]">Library</p>
+          <p className="text-[10px] text-text-dim/30 mt-0.5">{active.length} active{passive.length > 0 ? ` · ${passive.length} passive` : ''}</p>
         </div>
 
-        <div className="overflow-y-auto flex-1 divide-y divide-border/20">
+        <div className="overflow-y-auto flex-1 divide-y divide-border/10">
           {active.map(item => <Row key={item.id} item={item} onClick={() => setSelected(item)} />)}
 
           {passive.length > 0 && (
             <>
               <button onClick={() => setShowPassive(!showPassive)}
-                className="w-full text-left px-4 py-2 text-[10px] text-text-dim/40 hover:text-text-dim transition-colors uppercase tracking-wider">
+                className="w-full text-left px-4 py-2 text-[10px] text-text-dim/30 hover:text-text-dim/50 transition-colors uppercase tracking-wider">
                 {showPassive ? '▾' : '▸'} passive ({passive.length})
               </button>
               {showPassive && passive.map(item => <Row key={item.id} item={item} onClick={() => setSelected(item)} />)}
