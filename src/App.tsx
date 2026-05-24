@@ -8,9 +8,13 @@ import Sidebar from './components/Sidebar'
 type View = 'home' | 'session' | 'settings'
 
 export default function App() {
-  const { items } = useStore()
+  const { items, _hasHydrated } = useStore()
   const [view, setView] = useState<View>('home')
   const [sessionKey, setSessionKey] = useState(0)
+
+  if (!_hasHydrated) {
+    return <div className="min-h-dvh bg-bg" />
+  }
 
   const startSession = () => { setSessionKey(k => k + 1); setView('session') }
 

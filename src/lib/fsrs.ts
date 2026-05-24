@@ -1,7 +1,6 @@
 import type { Item } from '../types'
 
 const DAY = 86_400_000
-const MAX_NEW_PER_DAY = 5
 
 export function nextReview(item: Item, rating: 1 | 3 | 4): Pick<Item, 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'> {
   const now = Date.now()
@@ -36,10 +35,9 @@ export function isDue(item: Item): boolean {
   return Date.now() >= item.nextDue
 }
 
-export function buildQueue(items: Item[], todayNewCount: number): string[] {
+export function buildQueue(items: Item[]): string[] {
   const due = items.filter(i => i.reps > 0 && isDue(i)).sort((a, b) => (a.nextDue ?? 0) - (b.nextDue ?? 0))
-  const newAllowed = Math.max(0, MAX_NEW_PER_DAY - todayNewCount)
-  const fresh = items.filter(i => i.reps === 0).slice(0, newAllowed)
+  const fresh = items.filter(i => i.reps === 0)
 
   const ids: string[] = []
   let ri = 0, fi = 0
@@ -54,4 +52,13 @@ export function buildQueue(items: Item[], todayNewCount: number): string[] {
 export function daysUntilDue(item: Item): number | null {
   if (!item.nextDue) return null
   return Math.max(0, Math.ceil((item.nextDue - Date.now()) / DAY))
+}
+
+export function nextDueDate(items: Item[]): string | null {
+  const notDue = items.filter(i => i.nextDue && i.nextDue > Date.now())
+  if (notDue.length === 0) return null
+  const earliest = Math.min(...notDue.map(i => i.nextDue!))
+  const hours = Math.ceil((earliest - Date.now()) / 3_600_000)
+  if (hours < 24) return `${hours}h`
+  return `${Math.ceil(hours / 24)}d`
 }

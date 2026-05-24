@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Item, Rating, DayStats } from '../types'
+import type { Item, DayStats } from '../types'
 import { seedItems } from '../data/seed'
 import { nextReview } from '../lib/fsrs'
 
@@ -8,8 +8,9 @@ type Store = {
   items: Item[]
   stats: DayStats[]
   streak: number
+  _hasHydrated: boolean
 
-  rate: (id: string, rating: Rating) => void
+  rate: (id: string, rating: 1 | 3 | 4) => void
   addItem: (item: Omit<Item, 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>) => void
   resetProgress: () => void
   exportData: () => string
@@ -38,6 +39,7 @@ export const useStore = create<Store>()(
       items: seedItems,
       stats: [],
       streak: 0,
+      _hasHydrated: false,
 
       rate: (id, rating) => {
         const t = today()
@@ -47,7 +49,6 @@ export const useStore = create<Store>()(
 
           const update = nextReview(item, rating)
           const isNew = item.reps === 0
-          const correct = rating >= 2
 
           let dayStats = s.stats.find(d => d.date === t)
           const otherStats = s.stats.filter(d => d.date !== t)
@@ -55,7 +56,7 @@ export const useStore = create<Store>()(
           dayStats = {
             ...dayStats,
             reviewed: dayStats.reviewed + 1,
-            correct: dayStats.correct + (correct ? 1 : 0),
+            correct: dayStats.correct + (rating >= 3 ? 1 : 0),
             newLearned: dayStats.newLearned + (isNew ? 1 : 0),
           }
           const newStats = [...otherStats, dayStats]
@@ -93,6 +94,11 @@ export const useStore = create<Store>()(
         return get().stats.find(d => d.date === t) ?? { date: t, reviewed: 0, correct: 0, newLearned: 0 }
       },
     }),
-    { name: 'idiom-trainer-v3' },
+    {
+      name: 'idiom-trainer-v4',
+      onRehydrateStorage: () => () => {
+        useStore.setState({ _hasHydrated: true })
+      },
+    },
   ),
 )
