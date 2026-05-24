@@ -9,27 +9,40 @@ function shuffle<T>(a: T[]): T[] {
 function esc(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
 function distractors(target: Item, all: Item[], n: number): Item[] {
-  const pool = shuffle(all.filter(i => i.id !== target.id))
-  return pool.slice(0, Math.min(n, pool.length))
+  return shuffle(all.filter(i => i.id !== target.id)).slice(0, Math.min(n, all.length - 1))
 }
 
 function fillBlank(item: Item, all: Item[]): MCQuestion {
   const ex = item.examples[Math.floor(Math.random() * item.examples.length)]
   const blank = ex.replace(new RegExp(esc(item.phrase), 'gi'), '______')
-
-  const numDistractors = Math.min(3, all.length - 1)
-  const d = distractors(item, all, numDistractors)
+  const d = distractors(item, all, Math.min(3, all.length - 1))
   const opts = shuffle([item, ...d].map(i => i.phrase))
   return { type: 'fill-blank', itemId: item.id, prompt: blank, options: opts, correctIndex: opts.indexOf(item.phrase) }
 }
 
 function meaningMatch(item: Item, all: Item[]): MCQuestion {
-  const numDistractors = Math.min(3, all.length - 1)
-  const d = distractors(item, all, numDistractors)
+  const d = distractors(item, all, Math.min(3, all.length - 1))
   const opts = shuffle([item, ...d].map(i => i.meaning))
   return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(item.meaning) }
 }
 
+function sentenceJudge(item: Item): MCQuestion {
+  const correctEx = item.examples[Math.floor(Math.random() * item.examples.length)]
+  const wrongEx = item.wrongExample ?? `I ${item.phrase} the table yesterday.`
+  const showCorrectFirst = Math.random() < 0.5
+  const options = showCorrectFirst ? [correctEx, wrongEx] : [wrongEx, correctEx]
+  return {
+    type: 'sentence-judge',
+    itemId: item.id,
+    prompt: `Which sentence uses "${item.phrase}" correctly?`,
+    options,
+    correctIndex: showCorrectFirst ? 0 : 1,
+  }
+}
+
 export function generateQuestion(item: Item, all: Item[]): MCQuestion {
-  return Math.random() < 0.55 ? fillBlank(item, all) : meaningMatch(item, all)
+  const r = Math.random()
+  if (r < 0.4) return fillBlank(item, all)
+  if (r < 0.7) return meaningMatch(item, all)
+  return sentenceJudge(item)
 }

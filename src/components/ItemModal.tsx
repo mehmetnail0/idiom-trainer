@@ -7,42 +7,44 @@ export default function ItemModal({ item, onClose }: { item: Item; onClose: () =
   const url = `https://dictionary.cambridge.org/dictionary/english/${item.phrase.replace(/\s+/g, '-').replace(/'/g, '')}`
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-card rounded-2xl p-5 max-w-md w-full border border-border space-y-4 max-h-[85vh] overflow-y-auto"
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="bg-card rounded-xl p-5 max-w-md w-full border border-border/50 space-y-4 max-h-[80vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between">
           <div>
-            <h3 className="text-lg font-bold text-accent">"{item.phrase}"</h3>
-            <span className="text-xs text-text-dim">{item.type === 'word' ? 'Word' : 'Idiom'}</span>
+            <p className="text-accent font-medium">{item.phrase}</p>
+            <p className="text-[10px] text-text-dim/40 uppercase mt-0.5">{item.type}</p>
           </div>
-          <button onClick={onClose} className="text-text-dim hover:text-text text-lg leading-none">×</button>
+          <button onClick={onClose} className="text-text-dim/40 hover:text-text-dim text-lg">×</button>
         </div>
 
-        <p className="text-sm text-text">{item.meaning}</p>
+        <p className="text-sm text-text/90">{item.meaning}</p>
 
         {item.notes && (
+          <p className="text-[11px] text-text-dim leading-relaxed">{item.notes}</p>
+        )}
+
+        <div className="space-y-1.5">
+          <p className="text-[9px] text-text-dim/40 uppercase tracking-wider">Examples</p>
+          {item.examples.map((ex, i) => (
+            <p key={i} className="text-[11px] text-text-dim/60 italic pl-2.5 border-l border-border/30 leading-relaxed">{ex}</p>
+          ))}
+        </div>
+
+        {item.wrongExample && (
           <div>
-            <p className="text-xs text-text-dim mb-1 uppercase tracking-wider">Usage</p>
-            <p className="text-xs text-text-dim leading-relaxed">{item.notes}</p>
+            <p className="text-[9px] text-text-dim/40 uppercase tracking-wider mb-1">Wrong usage</p>
+            <p className="text-[11px] text-wrong/40 italic pl-2.5 border-l border-wrong/20">✗ {item.wrongExample}</p>
           </div>
         )}
 
-        <div>
-          <p className="text-xs text-text-dim mb-2 uppercase tracking-wider">Examples</p>
-          <div className="space-y-1.5">
-            {item.examples.map((ex, i) => (
-              <p key={i} className="text-xs text-text leading-relaxed pl-3 border-l-2 border-border">{ex}</p>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-text-dim pt-2 border-t border-border">
+        <div className="flex items-center justify-between pt-2 border-t border-border/30 text-[10px] text-text-dim/40">
           <div className="flex gap-3">
-            <span>✓ {item.reps} reps</span>
-            <span>Heat: {Math.round(heat * 100)}%</span>
-            {due !== null && <span>Due: {due === 0 ? 'now' : `${due}d`}</span>}
+            <span>{item.reps} reps</span>
+            <span>{Math.round(heat * 100)}% heat</span>
+            {due !== null && <span>{due === 0 ? 'due now' : `${due}d`}</span>}
           </div>
-          <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">Cambridge →</a>
+          <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors">cambridge →</a>
         </div>
       </div>
     </div>

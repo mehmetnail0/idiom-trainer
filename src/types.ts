@@ -6,19 +6,17 @@ export type Item = {
   phrase: string
   meaning: string
   examples: string[]
+  wrongExample?: string
   notes: string
-  // FSRS fields
-  stability: number    // days until next review
-  difficulty: number   // 1-10, affects interval growth
-  reps: number         // successful reviews in a row
+  stability: number
+  difficulty: number
+  reps: number
   lastReview: number | null
   nextDue: number | null
 }
 
-export type Rating = 1 | 2 | 3 | 4 // Again, Hard, Good, Easy
-
 export type MCQuestion = {
-  type: 'fill-blank' | 'meaning-match'
+  type: 'fill-blank' | 'meaning-match' | 'sentence-judge'
   itemId: string
   prompt: string
   options: string[]

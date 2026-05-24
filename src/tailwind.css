@@ -1,16 +1,15 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #0F1419;
-  --color-card: #1A1F2E;
-  --color-card-hover: #232839;
-  --color-accent: #EF9F27;
-  --color-correct: #22C55E;
-  --color-wrong: #EF4444;
-  --color-half: #F59E0B;
-  --color-text: #E5E7EB;
-  --color-text-dim: #9CA3AF;
-  --color-border: #2D3348;
+  --color-bg: #111111;
+  --color-card: #191919;
+  --color-card-hover: #222222;
+  --color-accent: #D4993D;
+  --color-correct: #4ADE80;
+  --color-wrong: #F87171;
+  --color-text: #D4D4D4;
+  --color-text-dim: #6B6B6B;
+  --color-border: #2A2A2A;
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
@@ -18,9 +17,10 @@ html, body {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  background: #111111;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
