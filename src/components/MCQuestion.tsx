@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MCQuestion as MCQ } from '../types'
+import type { MCQuestion as MCQ } from '../types'
 import OptionButton from './OptionButton'
 
 const typeLabel = { 'fill-blank': 'FILL IN THE BLANK', 'meaning-match': 'MEANING MATCH', 'context-usage': 'CONTEXT USAGE' }

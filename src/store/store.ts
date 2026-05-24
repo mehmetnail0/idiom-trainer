@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Idiom } from '../types'
+import type { Idiom } from '../types'
 import { seedIdioms } from '../data/seed'
 
 const DAY = 86_400_000

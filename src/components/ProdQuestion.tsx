@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ProdQuestion as PQ } from '../types'
+import type { ProdQuestion as PQ } from '../types'
 
 export default function ProdQuestion({ question, num, total, onAnswer }: { question: PQ; num: number; total: number; onAnswer: (correct: boolean) => void }) {
   const [text, setText] = useState('')

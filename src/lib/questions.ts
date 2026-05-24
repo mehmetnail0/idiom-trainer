@@ -1,4 +1,4 @@
-import { Idiom, Question, QuestionType } from '../types'
+import type { Idiom, Question, QuestionType } from '../types'
 
 function shuffle<T>(arr: T[]): T[] {
   const c = [...arr]

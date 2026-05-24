@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useStore } from '../store/store'
 import { buildQueue, generateQuestion } from '../lib/questions'
-import { Question } from '../types'
+import type { Question } from '../types'
 import MCQuestion from '../components/MCQuestion'
 import ProdQuestion from '../components/ProdQuestion'
 

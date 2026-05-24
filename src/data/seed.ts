@@ -1,4 +1,4 @@
-import { Idiom } from '../types'
+import type { Idiom } from '../types'
 
 const r = (phrase: string, meaning: string, example: string, category: Idiom['category'], difficulty: Idiom['difficulty']) =>
   ({ phrase, meaning, example, category, difficulty }) as const
