@@ -8,14 +8,21 @@ const LOCAL_KEY = 'idiom-trainer-data'
 
 type Persisted = { items: Item[]; stats: DayStats[]; lastSaved: number }
 
+function mergeWithSeed(saved: Item[]): Item[] {
+  const existing = new Set(saved.map(i => i.id))
+  const newFromSeed = seedItems.filter(s => !existing.has(s.id))
+  return [...saved, ...newFromSeed]
+}
+
 function readLocal(): Persisted | null {
   try {
     const raw = localStorage.getItem(LOCAL_KEY)
     if (!raw) return null
     const d = JSON.parse(raw)
-    if (d?.state?.items) return d.state
-    if (d?.items) return d
-    return null
+    const data = d?.state?.items ? d.state : d?.items ? d : null
+    if (!data) return null
+    data.items = mergeWithSeed(data.items)
+    return data
   } catch { return null }
 }
 
@@ -135,8 +142,9 @@ export const useStore = create<Store>()((set, get) => ({
     const cloud = await loadProgress()
     if (!cloud || !cloud.items) return
     if (cloud.lastSaved > get().lastSaved) {
-      writeLocal(cloud as Persisted)
-      set({ items: cloud.items as Item[], stats: cloud.stats as DayStats[], streak: calcStreak(cloud.stats as DayStats[]), lastSaved: cloud.lastSaved })
+      const merged = mergeWithSeed(cloud.items as Item[])
+      writeLocal({ items: merged, stats: cloud.stats as DayStats[], lastSaved: cloud.lastSaved })
+      set({ items: merged, stats: cloud.stats as DayStats[], streak: calcStreak(cloud.stats as DayStats[]), lastSaved: cloud.lastSaved })
     }
   },
 }))
