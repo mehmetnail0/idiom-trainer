@@ -12,8 +12,18 @@ function distractors(target: Item, all: Item[], n: number): Item[] {
   return shuffle(all.filter(i => i.id !== target.id)).slice(0, Math.min(n, all.length - 1))
 }
 
+const usedExamples = new Map<string, number>()
+
+function pickExample(item: Item): string {
+  const last = usedExamples.get(item.id) ?? -1
+  const candidates = item.examples.map((_, i) => i).filter(i => i !== last)
+  const pick = candidates.length > 0 ? candidates[Math.floor(Math.random() * candidates.length)] : 0
+  usedExamples.set(item.id, pick)
+  return item.examples[pick]
+}
+
 function fillBlank(item: Item, all: Item[]): MCQuestion {
-  const ex = item.examples[Math.floor(Math.random() * item.examples.length)]
+  const ex = pickExample(item)
   const blank = ex.replace(new RegExp(esc(item.phrase), 'gi'), '______')
   const d = distractors(item, all, Math.min(3, all.length - 1))
   const opts = shuffle([item, ...d].map(i => i.phrase))
@@ -21,7 +31,8 @@ function fillBlank(item: Item, all: Item[]): MCQuestion {
 }
 
 function meaningWithExample(item: Item): string {
-  const short = item.examples[0].length > 60 ? item.examples[0].slice(0, 57) + '...' : item.examples[0]
+  const ex = pickExample(item)
+  const short = ex.length > 60 ? ex.slice(0, 57) + '...' : ex
   return `${item.meaning}\n» ${short}`
 }
 
@@ -33,7 +44,7 @@ function meaningMatch(item: Item, all: Item[]): MCQuestion {
 }
 
 function sentenceJudge(item: Item): MCQuestion {
-  const correctEx = item.examples[Math.floor(Math.random() * item.examples.length)]
+  const correctEx = pickExample(item)
   const wrongEx = item.wrongExample ?? `I ${item.phrase} the table yesterday.`
   const showCorrectFirst = Math.random() < 0.5
   const options = showCorrectFirst ? [correctEx, wrongEx] : [wrongEx, correctEx]

@@ -35,18 +35,16 @@ export function isDue(item: Item): boolean {
   return Date.now() >= item.nextDue
 }
 
-export function buildQueue(items: Item[]): string[] {
-  const due = items.filter(i => i.reps > 0 && isDue(i)).sort((a, b) => (a.nextDue ?? 0) - (b.nextDue ?? 0))
-  const fresh = items.filter(i => i.reps === 0)
+function shuffle<T>(a: T[]): T[] {
+  const c = [...a]
+  for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j], c[i]] }
+  return c
+}
 
-  const ids: string[] = []
-  let ri = 0, fi = 0
-  while (ri < due.length || fi < fresh.length) {
-    if (ri < due.length) ids.push(due[ri++].id)
-    if (ri < due.length) ids.push(due[ri++].id)
-    if (fi < fresh.length) ids.push(fresh[fi++].id)
-  }
-  return ids
+export function buildQueue(items: Item[]): string[] {
+  const due = items.filter(i => i.reps > 0 && isDue(i))
+  const fresh = items.filter(i => i.reps === 0)
+  return shuffle([...due, ...fresh]).map(i => i.id)
 }
 
 export function daysUntilDue(item: Item): number | null {
