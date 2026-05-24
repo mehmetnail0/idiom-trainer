@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useStore } from '../store/store'
 import { buildQueue } from '../lib/fsrs'
 import { generateQuestion } from '../lib/questions'
-import type { MCQuestion } from '../types'
+import type { MCQuestion, Item } from '../types'
 import QuizCard from '../components/QuizCard'
 
 type QItem = { question: MCQuestion; itemId: string; key: number }
@@ -13,12 +13,64 @@ function shuffle<T>(a: T[]): T[] {
   return c
 }
 
+function SessionSummary({ correct, wrong, items, onExit }: { correct: string[]; wrong: string[]; items: Item[]; onExit: () => void }) {
+  const total = correct.length + wrong.length
+  const pct = total > 0 ? Math.round((correct.length / total) * 100) : 0
+
+  const wrongItems = wrong.map(id => items.find(i => i.id === id)).filter(Boolean) as Item[]
+  const correctItems = correct.map(id => items.find(i => i.id === id)).filter(Boolean) as Item[]
+
+  return (
+    <div className="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+      <div>
+        <p className="text-lg font-semibold text-correct/80">Done ✓</p>
+        <p className="text-[10px] text-text-dim/40 mt-1">Progress saved to cloud</p>
+      </div>
+
+      <div className="flex gap-4 text-sm">
+        <span><span className="text-correct font-semibold">{correct.length}</span> <span className="text-text-dim/40">correct</span></span>
+        <span><span className="text-wrong font-semibold">{wrong.length}</span> <span className="text-text-dim/40">wrong</span></span>
+        <span><span className="text-accent font-semibold">{pct}%</span></span>
+      </div>
+
+      {wrongItems.length > 0 && (
+        <div className="rounded-lg p-4 border border-wrong/15 bg-wrong/5 space-y-3">
+          <p className="text-[10px] text-wrong/60 uppercase tracking-wider">Review these</p>
+          {wrongItems.map(item => (
+            <div key={item.id} className="space-y-1">
+              <p className="text-sm text-text/80 font-medium">{item.phrase}</p>
+              <p className="text-[11px] text-text-dim/50">{item.meaning}</p>
+              <p className="text-[11px] text-text-dim/35 italic pl-2 border-l border-border/20">{item.examples[Math.floor(Math.random() * item.examples.length)]}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {correctItems.length > 0 && (
+        <div className="rounded-lg p-4 border border-border/15 space-y-2">
+          <p className="text-[10px] text-correct/40 uppercase tracking-wider">Nailed it</p>
+          <div className="flex flex-wrap gap-2">
+            {correctItems.map(item => (
+              <span key={item.id} className="text-[11px] text-text-dim/50 bg-card-hover px-2 py-1 rounded">{item.phrase}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <button onClick={onExit} className="w-full py-3 rounded-lg text-sm border border-border/30 text-text-dim/50 hover:text-text/70 transition-colors">
+        Back
+      </button>
+    </div>
+  )
+}
+
 export default function Session({ onExit }: { onExit: () => void }) {
   const { items, rate } = useStore()
 
   const [queue] = useState<QItem[]>(() => {
     let ids = buildQueue(items)
-    if (ids.length === 0) ids = shuffle(items.map(i => i.id)).slice(0, 10)
+    if (ids.length === 0) ids = shuffle(items.map(i => i.id))
+    ids = ids.slice(0, 10)
     return ids.map((id, i) => ({
       question: generateQuestion(items.find(x => x.id === id)!, items),
       itemId: id,
@@ -27,8 +79,8 @@ export default function Session({ onExit }: { onExit: () => void }) {
   })
 
   const [index, setIndex] = useState(0)
-  const [correctCount, setCorrectCount] = useState(0)
-  const [totalCount, setTotalCount] = useState(0)
+  const [correctIds, setCorrectIds] = useState<string[]>([])
+  const [wrongIds, setWrongIds] = useState<string[]>([])
   const [done, setDone] = useState(false)
 
   const current = queue[index]
@@ -37,32 +89,14 @@ export default function Session({ onExit }: { onExit: () => void }) {
   const handleDone = (correct: boolean, easy?: boolean) => {
     if (!current) return
     rate(current.itemId, correct ? (easy ? 4 : 3) : 1)
-    if (correct) setCorrectCount(c => c + 1)
-    setTotalCount(t => t + 1)
+    if (correct) setCorrectIds(c => [...c, current.itemId])
+    else setWrongIds(w => [...w, current.itemId])
     if (index < queue.length - 1) setIndex(i => i + 1)
     else setDone(true)
   }
 
   if (done) {
-    const pct = totalCount > 0 ? Math.round((correctCount / totalCount) * 100) : 0
-    return (
-      <div className="flex items-center justify-center min-h-[60vh] animate-[fadeIn_0.3s_ease-out]">
-        <div className="w-full max-w-xs space-y-5">
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-correct/80">Done ✓</p>
-            <p className="text-[10px] text-text-dim/40">Progress saved</p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm"><span className="text-text-dim">Reviewed</span><span>{totalCount}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-text-dim">Correct</span><span className="text-correct">{correctCount}</span></div>
-            <div className="flex justify-between text-sm"><span className="text-text-dim">Score</span><span className="text-accent">{pct}%</span></div>
-          </div>
-          <button onClick={onExit} className="w-full py-2.5 rounded-lg text-sm border border-border/40 text-text-dim hover:text-text transition-colors">
-            Back
-          </button>
-        </div>
-      </div>
-    )
+    return <SessionSummary correct={correctIds} wrong={wrongIds} items={items} onExit={onExit} />
   }
 
   if (!current || !currentItem) return null
