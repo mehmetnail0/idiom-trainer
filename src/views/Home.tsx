@@ -1,59 +1,69 @@
 import { useStore } from '../store/store'
+import { getHeat } from '../lib/fsrs'
 
 export default function Home({ onStart }: { onStart: () => void }) {
-  const { idioms, streak, totalSessions } = useStore()
-  const m = idioms.filter(i => i.status === 'mastered').length
-  const l = idioms.filter(i => i.status === 'learning').length
-  const n = idioms.filter(i => i.status === 'new').length
-  const weakness = [...idioms].filter(i => i.wrong > 0).sort((a, b) => b.wrong - a.wrong).slice(0, 5)
+  const { items, streak, stats, todayStats } = useStore()
+  const today = todayStats()
+
+  const hot = items.filter(i => getHeat(i) >= 0.75).length
+  const warm = items.filter(i => getHeat(i) > 0 && getHeat(i) < 0.75).length
+  const cold = items.filter(i => getHeat(i) === 0).length
+
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10)
+  const weekStats = stats.filter(s => s.date >= weekAgo)
+  const weekReviewed = weekStats.reduce((a, s) => a + s.reviewed, 0)
+  const monthAgo = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10)
+  const monthStats = stats.filter(s => s.date >= monthAgo)
+  const monthReviewed = monthStats.reduce((a, s) => a + s.reviewed, 0)
+
+  const dueNow = items.filter(i => !i.nextDue || Date.now() >= i.nextDue).length
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold">Idiom Trainer</h1>
-        <p className="text-text-dim text-sm mt-1">Master English idioms through daily drills</p>
+        <p className="text-text-dim text-sm mt-1">FSRS spaced repetition</p>
       </div>
 
       <button onClick={onStart} className="w-full bg-accent text-bg font-bold py-4 rounded-2xl text-lg active:scale-[0.98] transition-transform">
-        Start Session
+        {dueNow > 0 ? `Review (${dueNow} due)` : 'Start Session'}
       </button>
 
+      {/* Heat bar */}
       <div className="w-full">
         <div className="flex justify-between text-xs text-text-dim mb-1.5">
-          <span>{m} mastered</span><span>{l} learning</span><span>{n} new</span>
+          <span>{hot} hot</span><span>{warm} warming</span><span>{cold} new</span>
         </div>
         <div className="h-3 bg-border rounded-full overflow-hidden flex">
-          {m > 0 && <div className="bg-correct transition-all duration-500" style={{ width: `${(m / idioms.length) * 100}%` }} />}
-          {l > 0 && <div className="bg-accent transition-all duration-500" style={{ width: `${(l / idioms.length) * 100}%` }} />}
+          {hot > 0 && <div className="bg-correct transition-all duration-500" style={{ width: `${(hot / items.length) * 100}%` }} />}
+          {warm > 0 && <div className="bg-accent transition-all duration-500" style={{ width: `${(warm / items.length) * 100}%` }} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      {/* Counters */}
+      <div className="grid grid-cols-4 gap-2">
         <div className="bg-card rounded-xl p-3 text-center border border-border">
-          <div className="text-2xl font-bold text-accent">{streak}</div>
+          <div className="text-xl font-bold text-accent">{streak}</div>
           <div className="text-xs text-text-dim">Streak</div>
         </div>
         <div className="bg-card rounded-xl p-3 text-center border border-border">
-          <div className="text-2xl font-bold">{totalSessions}</div>
-          <div className="text-xs text-text-dim">Sessions</div>
+          <div className="text-xl font-bold">{today.reviewed}</div>
+          <div className="text-xs text-text-dim">Today</div>
         </div>
         <div className="bg-card rounded-xl p-3 text-center border border-border">
-          <div className="text-2xl font-bold">{idioms.length}</div>
-          <div className="text-xs text-text-dim">Total</div>
+          <div className="text-xl font-bold">{weekReviewed}</div>
+          <div className="text-xs text-text-dim">Week</div>
+        </div>
+        <div className="bg-card rounded-xl p-3 text-center border border-border">
+          <div className="text-xl font-bold">{monthReviewed}</div>
+          <div className="text-xs text-text-dim">Month</div>
         </div>
       </div>
 
-      {weakness.length > 0 && (
-        <div className="bg-card rounded-xl p-4 border border-border">
-          <h3 className="text-sm font-semibold text-wrong mb-2">Needs Practice</h3>
-          {weakness.map(w => (
-            <div key={w.id} className="flex justify-between text-sm py-1">
-              <span>{w.phrase}</span>
-              <span className="text-text-dim text-xs">{w.wrong}x wrong / {w.correct}x right</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Total */}
+      <div className="bg-card rounded-xl p-4 border border-border text-sm text-text-dim">
+        {items.length} items in library · {items.filter(i => i.type === 'idiom').length} idioms · {items.filter(i => i.type === 'word').length} words
+      </div>
     </div>
   )
 }

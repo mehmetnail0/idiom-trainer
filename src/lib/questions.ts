@@ -1,4 +1,4 @@
-import type { Idiom, Question, MCQuestion, ProdQuestion } from '../types'
+import type { Item, MCQuestion } from '../types'
 
 function shuffle<T>(a: T[]): T[] {
   const c = [...a]
@@ -8,57 +8,24 @@ function shuffle<T>(a: T[]): T[] {
 
 function esc(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
-function distractors(target: Idiom, all: Idiom[], n: number) {
-  return shuffle(all.filter(i => i.id !== target.id)).slice(0, n)
+function distractors(target: Item, all: Item[], n: number) {
+  return shuffle(all.filter(i => i.id !== target.id)).slice(0, Math.min(n, all.length - 1))
 }
 
-function fillBlank(idiom: Idiom, all: Idiom[]): MCQuestion {
-  const ex = idiom.examples[Math.floor(Math.random() * idiom.examples.length)]
-  const blank = ex.replace(new RegExp(esc(idiom.phrase), 'gi'), '___')
-  const d = distractors(idiom, all, 3)
-  const opts = shuffle([idiom, ...d].map(i => i.phrase))
-  return { type: 'fill-blank', idiomId: idiom.id, prompt: blank, options: opts, correctIndex: opts.indexOf(idiom.phrase) }
+function fillBlank(item: Item, all: Item[]): MCQuestion {
+  const ex = item.examples[Math.floor(Math.random() * item.examples.length)]
+  const blank = ex.replace(new RegExp(esc(item.phrase), 'gi'), '______')
+  const d = distractors(item, all, 3)
+  const opts = shuffle([item, ...d].map(i => i.phrase))
+  return { type: 'fill-blank', itemId: item.id, prompt: blank, options: opts, correctIndex: opts.indexOf(item.phrase) }
 }
 
-function meaningMatch(idiom: Idiom, all: Idiom[]): MCQuestion {
-  const d = distractors(idiom, all, 3)
-  const opts = shuffle([idiom, ...d].map(i => i.meaning))
-  return { type: 'meaning-match', idiomId: idiom.id, prompt: `What does "${idiom.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(idiom.meaning) }
+function meaningMatch(item: Item, all: Item[]): MCQuestion {
+  const d = distractors(item, all, 3)
+  const opts = shuffle([item, ...d].map(i => i.meaning))
+  return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(item.meaning) }
 }
 
-function contextUsage(idiom: Idiom, all: Idiom[]): MCQuestion {
-  const d = distractors(idiom, all, 3)
-  const correct = idiom.examples[Math.floor(Math.random() * idiom.examples.length)]
-  const wrong = d.map(x => {
-    const ex = x.examples[Math.floor(Math.random() * x.examples.length)]
-    return ex.replace(new RegExp(esc(x.phrase), 'gi'), idiom.phrase)
-  })
-  const opts = shuffle([correct, ...wrong])
-  return { type: 'context-usage', idiomId: idiom.id, prompt: `Which sentence uses "${idiom.phrase}" correctly?`, options: opts, correctIndex: opts.indexOf(correct) }
-}
-
-function production(idiom: Idiom): ProdQuestion {
-  return { type: 'production', idiomId: idiom.id, prompt: `Use "${idiom.phrase}" in a natural sentence. Any context.` }
-}
-
-type QType = 'fill-blank' | 'meaning-match' | 'context-usage' | 'production'
-const weights: QType[] = ['fill-blank', 'fill-blank', 'fill-blank', 'meaning-match', 'meaning-match', 'meaning-match', 'context-usage', 'context-usage', 'production']
-
-export function generateQuestion(idiom: Idiom, all: Idiom[]): Question {
-  const t = weights[Math.floor(Math.random() * weights.length)]
-  switch (t) {
-    case 'fill-blank': return fillBlank(idiom, all)
-    case 'meaning-match': return meaningMatch(idiom, all)
-    case 'context-usage': return contextUsage(idiom, all)
-    case 'production': return production(idiom)
-  }
-}
-
-export function buildQueue(idioms: Idiom[], limit: number): string[] {
-  const now = Date.now()
-  const order = { new: 0, learning: 1, mastered: 2 }
-  const sorted = [...idioms].sort((a, b) => order[a.status] - order[b.status] || (a.nextDue ?? 0) - (b.nextDue ?? 0))
-  const due = sorted.filter(i => !i.nextDue || i.nextDue <= now)
-  const rest = sorted.filter(i => i.nextDue && i.nextDue > now)
-  return [...due, ...rest].slice(0, limit).map(i => i.id)
+export function generateQuestion(item: Item, all: Item[]): MCQuestion {
+  return Math.random() < 0.55 ? fillBlank(item, all) : meaningMatch(item, all)
 }

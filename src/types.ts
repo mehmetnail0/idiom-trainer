@@ -1,32 +1,33 @@
-export type Category = 'everyday' | 'business' | 'casual'
-export type IdiomStatus = 'new' | 'learning' | 'mastered'
+export type ItemType = 'idiom' | 'word'
 
-export type Idiom = {
+export type Item = {
   id: string
+  type: ItemType
   phrase: string
   meaning: string
   examples: string[]
   notes: string
-  category: Category
-  status: IdiomStatus
-  correct: number
-  wrong: number
-  lastSeen: number | null
+  // FSRS fields
+  stability: number    // days until next review
+  difficulty: number   // 1-10, affects interval growth
+  reps: number         // successful reviews in a row
+  lastReview: number | null
   nextDue: number | null
 }
 
+export type Rating = 1 | 2 | 3 | 4 // Again, Hard, Good, Easy
+
 export type MCQuestion = {
-  type: 'fill-blank' | 'meaning-match' | 'context-usage'
-  idiomId: string
+  type: 'fill-blank' | 'meaning-match'
+  itemId: string
   prompt: string
   options: string[]
   correctIndex: number
 }
 
-export type ProdQuestion = {
-  type: 'production'
-  idiomId: string
-  prompt: string
+export type DayStats = {
+  date: string
+  reviewed: number
+  correct: number
+  newLearned: number
 }
-
-export type Question = MCQuestion | ProdQuestion
