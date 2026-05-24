@@ -161,6 +161,48 @@ const expressions: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'last
     wrongExample: 'I hear you talking on the phone from the other room.',
     notes: 'Not literal hearing — means empathy/understanding. "I hear you, brother" is a stronger, more personal form. Homelander uses it sarcastically in The Boys. Can be genuine or dismissive depending on tone.',
   },
+  {
+    type: 'idiom',
+    phrase: "I've got your back",
+    meaning: 'I support you and will protect/help you when needed',
+    examples: [
+      "Don't worry about the meeting — I've got your back.",
+      '"I\'m nervous about the presentation." "I\'ve got your back, just go for it."',
+      'Good teammates always have each other\'s backs.',
+      'She had my back when nobody else believed in the idea.',
+      'I\'ve got your back, no matter what happens.',
+    ],
+    wrongExample: "I've got your back — can you turn around so I can see it?",
+    notes: 'Military origin — literally watching behind someone for danger. Very common in friendships, teams, relationships. "Got your back" = shorter form. "Watch your back" = be careful (different meaning!).',
+  },
+  {
+    type: 'idiom',
+    phrase: 'you\'ll hear from us',
+    meaning: 'We will contact you / you will get our response (can be neutral, positive, or threatening)',
+    examples: [
+      '"Thank you for interviewing. You\'ll hear from us within a week."',
+      'If you keep doing this, you\'ll hear from our lawyers.',
+      '"How did the audition go?" "They said I\'d hear from them soon."',
+      'We appreciate the proposal — you\'ll hear from us by Friday.',
+      'Cross us again and you\'ll hear from all of us.',
+    ],
+    wrongExample: 'You\'ll hear from us because we are very loud people.',
+    notes: '"Hear from" = receive communication from someone. Neutral in job interviews, threatening in conflict. "You\'ll hear from my lawyer" = classic threat. "Hear from all of us" = group warning — much stronger.',
+  },
+  {
+    type: 'idiom',
+    phrase: 'have to deal with',
+    meaning: 'Be forced to face, confront, or handle someone/something difficult',
+    examples: [
+      'If they mess with our team, they\'ll have to deal with all of us.',
+      'You\'ll have to deal with the consequences of your actions.',
+      'I don\'t want to deal with this right now — can it wait?',
+      'Anyone who crosses that line will have to deal with me personally.',
+      'Running a business means dealing with problems every single day.',
+    ],
+    wrongExample: 'I dealt with a great vacation last weekend.',
+    notes: '"Deal with" has two modes: (1) handle/manage a problem, (2) face/confront a person. "They\'ll have to deal with us" = karşılarında bizi bulacaklar. Very versatile — one of the most used phrases in English.',
+  },
 ]
 
 export const seedItems: Item[] = [...idioms, ...words, ...expressions].map((d, i) => ({
