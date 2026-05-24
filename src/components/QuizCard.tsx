@@ -34,13 +34,19 @@ export default function QuizCard({ question, item, num, total, onDone }: {
             else if (i === picked) cls = 'border-wrong/40 bg-wrong/5'
             else cls = 'border-border/20 opacity-25'
           }
+          const parts = opt.split('\n» ')
           return (
             <button key={i} disabled={answered} onClick={() => setPicked(i)}
               className={`w-full text-left px-4 py-3 rounded-lg border text-[13px] leading-relaxed transition-all ${cls}`}>
-              {question.type === 'sentence-judge'
-                ? opt
-                : <><span className="text-text-dim mr-2">{String.fromCharCode(65 + i)})</span>{opt}</>
-              }
+              {question.type === 'sentence-judge' ? (
+                opt
+              ) : (
+                <div>
+                  <span className="text-text-dim mr-2">{String.fromCharCode(65 + i)})</span>
+                  {parts[0]}
+                  {parts[1] && <p className="text-[11px] text-text-dim/50 italic mt-1 ml-5">» {parts[1]}</p>}
+                </div>
+              )}
             </button>
           )
         })}

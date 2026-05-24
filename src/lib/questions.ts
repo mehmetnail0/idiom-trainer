@@ -20,10 +20,16 @@ function fillBlank(item: Item, all: Item[]): MCQuestion {
   return { type: 'fill-blank', itemId: item.id, prompt: blank, options: opts, correctIndex: opts.indexOf(item.phrase) }
 }
 
+function meaningWithExample(item: Item): string {
+  const short = item.examples[0].length > 60 ? item.examples[0].slice(0, 57) + '...' : item.examples[0]
+  return `${item.meaning}\n» ${short}`
+}
+
 function meaningMatch(item: Item, all: Item[]): MCQuestion {
   const d = distractors(item, all, Math.min(3, all.length - 1))
-  const opts = shuffle([item, ...d].map(i => i.meaning))
-  return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(item.meaning) }
+  const items = shuffle([item, ...d])
+  const opts = items.map(i => meaningWithExample(i))
+  return { type: 'meaning-match', itemId: item.id, prompt: `What does "${item.phrase}" mean?`, options: opts, correctIndex: opts.indexOf(meaningWithExample(item)) }
 }
 
 function sentenceJudge(item: Item): MCQuestion {
