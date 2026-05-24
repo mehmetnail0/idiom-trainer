@@ -203,6 +203,20 @@ const expressions: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'last
     wrongExample: 'I dealt with a great vacation last weekend.',
     notes: '"Deal with" has two modes: (1) handle/manage a problem, (2) face/confront a person. "They\'ll have to deal with us" = karşılarında bizi bulacaklar. Very versatile — one of the most used phrases in English.',
   },
+  {
+    type: 'idiom',
+    phrase: 'run off',
+    meaning: 'Leave quickly, escape, or flee — often without warning or permission',
+    examples: [
+      'He ran off before anyone could ask him what happened.',
+      'The kid ran off with my phone — I had to chase him down.',
+      "Don't run off — we're not done talking.",
+      'She ran off to Paris and never looked back.',
+      'The dog ran off the moment I opened the gate.',
+    ],
+    wrongExample: 'I ran off the presentation slides on my printer.',
+    notes: 'Phrasal verb. Multiple uses: (1) flee/escape — "he ran off" = kaçtı. (2) leave suddenly — "she ran off to Berlin" = çekip gitti. (3) elope — "they ran off together" = birlikte kaçtılar. (4) "run off with" = çalıp kaçmak. Very natural in daily speech — "kaçmak" in almost every context.',
+  },
 ]
 
 export const seedItems: Item[] = [...idioms, ...words, ...expressions].map((d, i) => ({
