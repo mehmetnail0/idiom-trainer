@@ -146,7 +146,24 @@ const words: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'lastReview
   },
 ]
 
-export const seedItems: Item[] = [...idioms, ...words].map((d, i) => ({
+const expressions: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>[] = [
+  {
+    type: 'idiom',
+    phrase: 'I hear you',
+    meaning: 'I understand what you\'re saying / I empathize with your situation',
+    examples: [
+      '"This project is exhausting." "I hear you, brother."',
+      'I hear you — it\'s frustrating when things don\'t go as planned.',
+      '"We need more time." "I hear you, but the deadline is firm."',
+      'I hear you. Let me see what I can do about it.',
+      '"Nobody listens to my ideas." "I hear you — that\'s rough."',
+    ],
+    wrongExample: 'I hear you talking on the phone from the other room.',
+    notes: 'Not literal hearing — means empathy/understanding. "I hear you, brother" is a stronger, more personal form. Homelander uses it sarcastically in The Boys. Can be genuine or dismissive depending on tone.',
+  },
+]
+
+export const seedItems: Item[] = [...idioms, ...words, ...expressions].map((d, i) => ({
   ...d,
   id: `s${i + 1}`,
   stability: 0,

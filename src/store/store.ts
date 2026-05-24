@@ -2,34 +2,35 @@ import { create } from 'zustand'
 import type { Item, DayStats } from '../types'
 import { seedItems } from '../data/seed'
 import { nextReview } from '../lib/fsrs'
+import { saveProgress, loadProgress } from '../lib/supabase'
 
-const KEY = 'idiom-trainer-data'
+const LOCAL_KEY = 'idiom-trainer-data'
 
-type Persisted = {
-  items: Item[]
-  stats: DayStats[]
-  lastSaved: number
-}
+type Persisted = { items: Item[]; stats: DayStats[]; lastSaved: number }
 
-function loadFromStorage(): Persisted | null {
+function readLocal(): Persisted | null {
   try {
-    const raw = localStorage.getItem(KEY)
+    const raw = localStorage.getItem(LOCAL_KEY)
     if (!raw) return null
-    const data = JSON.parse(raw)
-    if (data?.state) return data.state as Persisted
-    if (data?.items) return data as Persisted
+    const d = JSON.parse(raw)
+    if (d?.state?.items) return d.state
+    if (d?.items) return d
     return null
   } catch { return null }
 }
 
-function saveToStorage(data: Persisted) {
-  localStorage.setItem(KEY, JSON.stringify(data))
+function writeLocal(data: Persisted) {
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(data))
 }
 
-function getInitialState(): Persisted {
-  const saved = loadFromStorage()
-  if (saved && saved.items && saved.items.length > 0) return saved
-  return { items: seedItems, stats: [], lastSaved: 0 }
+async function writeCloud(data: Persisted) {
+  const ok = await saveProgress(data)
+  if (!ok) console.warn('[idiom-trainer] cloud save failed — local backup intact')
+}
+
+function persist(data: Persisted) {
+  writeLocal(data)
+  writeCloud(data)
 }
 
 function today() { return new Date().toISOString().slice(0, 10) }
@@ -52,6 +53,7 @@ type Store = {
   stats: DayStats[]
   streak: number
   lastSaved: number
+  cloudStatus: 'idle' | 'saving' | 'saved' | 'error'
 
   rate: (id: string, rating: 1 | 3 | 4) => void
   addItem: (item: Omit<Item, 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>) => void
@@ -59,15 +61,20 @@ type Store = {
   exportData: () => string
   importData: (json: string) => boolean
   todayStats: () => DayStats
+  syncFromCloud: () => Promise<void>
 }
 
-const init = getInitialState()
+const local = readLocal()
+const init: Persisted = local && local.items?.length > 0
+  ? local
+  : { items: seedItems, stats: [], lastSaved: 0 }
 
 export const useStore = create<Store>()((set, get) => ({
   items: init.items,
   stats: init.stats,
   streak: calcStreak(init.stats),
   lastSaved: init.lastSaved,
+  cloudStatus: 'idle',
 
   rate: (id, rating) => {
     const t = today()
@@ -81,35 +88,28 @@ export const useStore = create<Store>()((set, get) => ({
       let dayStats = s.stats.find(d => d.date === t)
       const otherStats = s.stats.filter(d => d.date !== t)
       if (!dayStats) dayStats = { date: t, reviewed: 0, correct: 0, newLearned: 0 }
-      dayStats = {
-        ...dayStats,
-        reviewed: dayStats.reviewed + 1,
-        correct: dayStats.correct + (rating >= 3 ? 1 : 0),
-        newLearned: dayStats.newLearned + (isNew ? 1 : 0),
-      }
+      dayStats = { ...dayStats, reviewed: dayStats.reviewed + 1, correct: dayStats.correct + (rating >= 3 ? 1 : 0), newLearned: dayStats.newLearned + (isNew ? 1 : 0) }
       const newStats = [...otherStats, dayStats]
       const newItems = s.items.map(i => i.id === id ? { ...i, ...update } : i)
       const now = Date.now()
 
-      saveToStorage({ items: newItems, stats: newStats, lastSaved: now })
+      persist({ items: newItems, stats: newStats, lastSaved: now })
 
       return { items: newItems, stats: newStats, streak: calcStreak(newStats), lastSaved: now }
     })
   },
 
-  addItem: (data) => {
-    set(s => {
-      const newItems = [...s.items, { ...data, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null }]
-      const now = Date.now()
-      saveToStorage({ items: newItems, stats: s.stats, lastSaved: now })
-      return { items: newItems, lastSaved: now }
-    })
-  },
+  addItem: (data) => set(s => {
+    const newItems = [...s.items, { ...data, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null }]
+    const now = Date.now()
+    persist({ items: newItems, stats: s.stats, lastSaved: now })
+    return { items: newItems, lastSaved: now }
+  }),
 
   resetProgress: () => {
     const newItems = get().items.map(i => ({ ...i, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null }))
     const now = Date.now()
-    saveToStorage({ items: newItems, stats: [], lastSaved: now })
+    persist({ items: newItems, stats: [], lastSaved: now })
     set({ items: newItems, stats: [], streak: 0, lastSaved: now })
   },
 
@@ -120,7 +120,7 @@ export const useStore = create<Store>()((set, get) => ({
       const d = JSON.parse(json)
       if (!d.items) return false
       const now = Date.now()
-      saveToStorage({ items: d.items, stats: d.stats ?? [], lastSaved: now })
+      persist({ items: d.items, stats: d.stats ?? [], lastSaved: now })
       set({ items: d.items, stats: d.stats ?? [], streak: calcStreak(d.stats ?? []), lastSaved: now })
       return true
     } catch { return false }
@@ -130,4 +130,15 @@ export const useStore = create<Store>()((set, get) => ({
     const t = today()
     return get().stats.find(d => d.date === t) ?? { date: t, reviewed: 0, correct: 0, newLearned: 0 }
   },
+
+  syncFromCloud: async () => {
+    const cloud = await loadProgress()
+    if (!cloud || !cloud.items) return
+    if (cloud.lastSaved > get().lastSaved) {
+      writeLocal(cloud as Persisted)
+      set({ items: cloud.items as Item[], stats: cloud.stats as DayStats[], streak: calcStreak(cloud.stats as DayStats[]), lastSaved: cloud.lastSaved })
+    }
+  },
 }))
+
+useStore.getState().syncFromCloud()
