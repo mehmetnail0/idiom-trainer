@@ -74,8 +74,9 @@ export default function Session({ onExit }: { onExit: () => void }) {
   const [round, setRound] = useState(0)
 
   const makeQueue = (): QItem[] => {
+    const activeItems = items.filter(i => !i.archived)
     let ids = buildQueue(items)
-    if (ids.length === 0) ids = shuffle(items.map(i => i.id))
+    if (ids.length === 0) ids = shuffle(activeItems.map(i => i.id))
     ids = ids.slice(0, 10)
     return ids.map((id, i) => ({
       question: generateQuestion(items.find(x => x.id === id)!, items),

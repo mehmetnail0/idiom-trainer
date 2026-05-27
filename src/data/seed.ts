@@ -1,4 +1,5 @@
 import type { Item } from '../types'
+import { seedPhrases } from './seed-phrases'
 
 const idioms: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>[] = [
   {
@@ -289,12 +290,23 @@ const expressions: Omit<Item, 'id' | 'stability' | 'difficulty' | 'reps' | 'last
   },
 ]
 
-export const seedItems: Item[] = [...idioms, ...words, ...expressions].map((d, i) => ({
+const originalItems = [...idioms, ...words, ...expressions]
+
+const phraseItems = seedPhrases.map((d, i) => ({
+  ...d,
+  id: `p${i + 1}`,
+}))
+
+export const seedItems: Item[] = [...originalItems.map((d, i) => ({
   ...d,
   id: `s${i + 1}`,
+})), ...phraseItems].map(d => ({
+  ...d,
   stability: 0,
   difficulty: 5,
   reps: 0,
   lastReview: null,
   nextDue: null,
+  correctCount: 0,
+  archived: false,
 }))

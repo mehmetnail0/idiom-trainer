@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Item } from '../types'
 import { getHeat, isPassive, daysUntilDue } from '../lib/fsrs'
+import { useStore } from '../store/store'
 import ItemModal from './ItemModal'
 
 function heatStyle(heat: number): string {
@@ -43,16 +44,20 @@ function Row({ item, onClick }: { item: Item; onClick: () => void }) {
 export default function Sidebar({ items }: { items: Item[] }) {
   const [selected, setSelected] = useState<Item | null>(null)
   const [showPassive, setShowPassive] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
+  const { unarchiveItem } = useStore()
 
-  const active = items.filter(i => !isPassive(i))
-  const passive = items.filter(i => isPassive(i))
+  const nonArchived = items.filter(i => !i.archived)
+  const active = nonArchived.filter(i => !isPassive(i))
+  const passive = nonArchived.filter(i => isPassive(i))
+  const archived = items.filter(i => i.archived)
 
   return (
     <>
       <div className="flex flex-col h-full">
         <div className="px-4 py-3 border-b border-border/30 shrink-0">
           <p className="text-[11px] text-text-dim/60 uppercase tracking-[0.15em]">Library</p>
-          <p className="text-[10px] text-text-dim/30 mt-0.5">{active.length} active{passive.length > 0 ? ` · ${passive.length} passive` : ''}</p>
+          <p className="text-[10px] text-text-dim/30 mt-0.5">{active.length} active{passive.length > 0 ? ` · ${passive.length} passive` : ''}{archived.length > 0 ? ` · ${archived.length} archived` : ''}</p>
         </div>
 
         <div className="overflow-y-auto flex-1 divide-y divide-border/10">
@@ -65,6 +70,25 @@ export default function Sidebar({ items }: { items: Item[] }) {
                 {showPassive ? '▾' : '▸'} passive ({passive.length})
               </button>
               {showPassive && passive.map(item => <Row key={item.id} item={item} onClick={() => setSelected(item)} />)}
+            </>
+          )}
+
+          {archived.length > 0 && (
+            <>
+              <button onClick={() => setShowArchived(!showArchived)}
+                className="w-full text-left px-4 py-2 text-[10px] text-text-dim/30 hover:text-text-dim/50 transition-colors uppercase tracking-wider">
+                {showArchived ? '▾' : '▸'} archived ({archived.length})
+              </button>
+              {showArchived && archived.map(item => (
+                <div key={item.id} className="flex items-center group">
+                  <button onClick={() => setSelected(item)} className="flex-1 text-left px-4 py-2.5 hover:bg-card-hover transition-colors min-w-0">
+                    <span className="text-[13px] text-text-dim/40 truncate block">{item.phrase}</span>
+                  </button>
+                  <button onClick={() => unarchiveItem(item.id)} className="px-2 py-1 mr-2 text-[9px] text-accent/50 hover:text-accent opacity-0 group-hover:opacity-100 transition-opacity" title="Restore">
+                    ↩
+                  </button>
+                </div>
+              ))}
             </>
           )}
         </div>

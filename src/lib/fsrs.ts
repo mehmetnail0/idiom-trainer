@@ -41,10 +41,18 @@ function shuffle<T>(a: T[]): T[] {
   return c
 }
 
+function reviewedToday(item: Item): boolean {
+  if (!item.lastReview) return false
+  return new Date(item.lastReview).toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10)
+}
+
 export function buildQueue(items: Item[]): string[] {
-  const due = items.filter(i => i.reps > 0 && isDue(i))
-  const fresh = items.filter(i => i.reps === 0)
-  return shuffle([...due, ...fresh]).map(i => i.id)
+  const active = items.filter(i => !i.archived)
+  const due = shuffle(active.filter(i => i.reps > 0 && isDue(i) && !reviewedToday(i)))
+  const wrongToday = shuffle(active.filter(i => i.reps === 0 && i.lastReview != null && reviewedToday(i)))
+  const fresh = shuffle(active.filter(i => i.reps === 0 && i.lastReview == null))
+  const unseenToday = shuffle(active.filter(i => i.reps > 0 && !reviewedToday(i) && !isDue(i)))
+  return [...due, ...wrongToday, ...fresh, ...unseenToday].map(i => i.id)
 }
 
 export function daysUntilDue(item: Item): number | null {

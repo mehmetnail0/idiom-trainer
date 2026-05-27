@@ -64,6 +64,8 @@ type Store = {
 
   rate: (id: string, rating: 1 | 3 | 4) => void
   addItem: (item: Omit<Item, 'stability' | 'difficulty' | 'reps' | 'lastReview' | 'nextDue'>) => void
+  archiveItem: (id: string) => void
+  unarchiveItem: (id: string) => void
   resetProgress: () => void
   exportData: () => string
   importData: (json: string) => boolean
@@ -89,12 +91,28 @@ export const useStore = create<Store>()((set, get) => ({
       const item = s.items.find(i => i.id === id)
       if (!item) return s
 
-      const update = nextReview(item, rating)
-      const isNew = item.reps === 0
+      const reviewedToday = item.lastReview != null && new Date(item.lastReview).toISOString().slice(0, 10) === t
 
       let dayStats = s.stats.find(d => d.date === t)
       const otherStats = s.stats.filter(d => d.date !== t)
       if (!dayStats) dayStats = { date: t, reviewed: 0, correct: 0, newLearned: 0 }
+
+      if (reviewedToday && rating >= 3) {
+        dayStats = { ...dayStats, reviewed: dayStats.reviewed + 1, correct: dayStats.correct + 1 }
+        const newStats = [...otherStats, dayStats]
+        const now = Date.now()
+        persist({ items: s.items, stats: newStats, lastSaved: now })
+        return { stats: newStats, streak: calcStreak(newStats), lastSaved: now }
+      }
+
+      const update = nextReview(item, rating)
+      const prevReviewDate = item.lastReview ? new Date(item.lastReview).toISOString().slice(0, 10) : null
+      const alreadyCountedToday = prevReviewDate === t
+      const newCorrectCount = rating >= 3 ? (item.correctCount ?? 0) + (alreadyCountedToday ? 0 : 1) : 0
+      const shouldArchive = newCorrectCount >= 7
+      Object.assign(update, { correctCount: newCorrectCount, archived: shouldArchive || !!item.archived })
+      const isNew = item.reps === 0
+
       dayStats = { ...dayStats, reviewed: dayStats.reviewed + 1, correct: dayStats.correct + (rating >= 3 ? 1 : 0), newLearned: dayStats.newLearned + (isNew ? 1 : 0) }
       const newStats = [...otherStats, dayStats]
       const newItems = s.items.map(i => i.id === id ? { ...i, ...update } : i)
@@ -107,7 +125,21 @@ export const useStore = create<Store>()((set, get) => ({
   },
 
   addItem: (data) => set(s => {
-    const newItems = [...s.items, { ...data, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null }]
+    const newItems = [...s.items, { ...data, stability: 0, difficulty: 5, reps: 0, lastReview: null, nextDue: null, correctCount: 0, archived: false }]
+    const now = Date.now()
+    persist({ items: newItems, stats: s.stats, lastSaved: now })
+    return { items: newItems, lastSaved: now }
+  }),
+
+  archiveItem: (id) => set(s => {
+    const newItems = s.items.map(i => i.id === id ? { ...i, archived: true } : i)
+    const now = Date.now()
+    persist({ items: newItems, stats: s.stats, lastSaved: now })
+    return { items: newItems, lastSaved: now }
+  }),
+
+  unarchiveItem: (id) => set(s => {
+    const newItems = s.items.map(i => i.id === id ? { ...i, archived: false, correctCount: 0 } : i)
     const now = Date.now()
     persist({ items: newItems, stats: s.stats, lastSaved: now })
     return { items: newItems, lastSaved: now }

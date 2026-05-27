@@ -3,6 +3,7 @@ export type ItemType = 'idiom' | 'word'
 export type Item = {
   id: string
   type: ItemType
+  category?: string
   phrase: string
   meaning: string
   examples: string[]
@@ -13,6 +14,8 @@ export type Item = {
   reps: number
   lastReview: number | null
   nextDue: number | null
+  correctCount?: number
+  archived?: boolean
 }
 
 export type MCQuestion = {
